@@ -1,0 +1,196 @@
+//Daniel Ghita | Snake Game
+
+int x = 300, y = 300, speed = 25, boxX, boxY, points = 0, lengthsnake = 3, maxsnake = 1000;
+boolean box = false, up = false, down = false, right = false, left = false, startScreen = true, gameOver = false;
+
+/* Variables x and y are the position of the first box in the snake. BoxX and BoxY contain the position of
+ the "point" the user needs to collect. Maxsnake declares the max value for the array, and in this scenario,
+ the value at which the program will crash if reached, which is why it is set to a high value. The boolean box
+ is used to show if there is a "point" in play, and if not, to call the method to create another. Up, down,
+ left, and right are used to show which current input is active. startScreen and gameOver are used to easily
+ track the current game state. */
+
+int [] snakeX = new int [maxsnake]; //Declares array to hold x values of the snake
+int [] snakeY = new int [maxsnake]; //Declares array to hold y values of the snake
+
+void setup() { //Sets up game window
+  size(600, 600);
+  rectMode(CENTER);
+  textSize(32);
+  textAlign(LEFT);
+  frameRate(10); //Used to regulate the speed of the snake, and allow the correct spacing between snake parts
+}
+
+void draw() { //Calls all methods to be ran
+  initialize();
+  controls();
+  createPoint();
+  snakeShift();
+  snakeDraw();
+  snakeDeath();
+  collectPoints();
+  startScreen();
+  gameOver();
+}
+
+void initialize() { //Initialize snake head
+  background (0);
+  delay(10);
+  fill(0, 255, 0);
+  ellipse(boxX, boxY, 15, 15);
+}
+
+void controls() { //Allows all input controls to be found in one place
+
+  //The if statement below allows a "button" to be clicked on the start screen to start the game
+  if (mousePressed && startScreen == true && 175 < mouseX && 425 > mouseX && 275 < mouseY && 325 > mouseY) {
+    startScreen = false;
+  }
+
+  //The if statement below allows a "button" to be clicked on the game over screen to exit the program
+  if (mousePressed && gameOver == true && 200 < mouseX && 400 > mouseX && 375 < mouseY && 425 > mouseY) {
+    exit();
+  }
+
+  /* The following 4 if statements allow the boolean values for the snake's direction to be set, but
+   only if it meets certain parameters so that the snake cannot turn into itself and kill itself, as
+   well as not allowing the snake to start moving until the user confirms the start of the game */
+
+  if ((keyCode==UP)&&(down != true)&&(startScreen != true)) {
+    up = true;
+    down = false;
+    right = false;
+    left = false;
+  }
+  if ((keyCode==DOWN)&&(up != true)&&(startScreen != true)) {
+    up = false;
+    down = true;
+    right = false;
+    left = false;
+  }
+  if ((keyCode==RIGHT)&&(left != true)&&(startScreen != true)) {
+    up = false;
+    down = false;
+    right = true;
+    left = false;
+  }
+  if ((keyCode==LEFT)&&(right != true)&&(startScreen != true)) {
+    up = false;
+    down = false;
+    right = false;
+    left = true;
+  }
+
+  /* The next 4 if statements control the direction of the snake, using the booleans set above
+   from the user input */
+
+  if (up == true) {
+    y = y - speed;
+  }
+  if (down == true) {
+    y = y + speed;
+  }
+  if (right == true) {
+    x = x + speed;
+  }
+  if (left == true) {
+    x = x - speed;
+  }
+}
+
+void createPoint() { //Creates "points" to be collected by the snake
+  if (box == false) {
+    boxX = int(random(100, 500)); //Generates a random X spawn location
+    boxY = int(random(100, 500)); //Generates a random Y spawn location
+    box = true; //Sets box back to true after generating a new one
+  }
+}
+
+void snakeShift() { //Facilitates the snake tail by changing the coordinates of the lead box to the second box, second to third, and so on
+  for (int i = lengthsnake; i>0; i--) { //For every "unit" of the snake, shift its values back an spot in the array
+    snakeX[i] = snakeX [i-1];
+    snakeY[i] = snakeY [i-1];
+  }
+  snakeX [0] = x;
+  snakeY [0] = y;
+}
+
+void snakeDraw() { //Draws Snake Tail
+  for (int i = 1; i < lengthsnake; i++) {
+    fill(255);
+    rect(snakeX[i], snakeY[i], 20, 20); //Snake Tail from array
+    fill(255, 0, 0);
+    rect(snakeX[0], snakeY[0], 20, 20); //Draws Head of snake seperate so it can be a different color
+  }
+}
+
+void snakeDeath() { //Allows death of snake and the end of game
+  for (int i = 3; i < lengthsnake; i++) { //Disallows snake to run over its tail by checking the elements of the head unit against the body array
+    if ((snakeX[i] == snakeX[0]) && (snakeY[i] == snakeY[0])) {
+      gameOver = true;
+    }
+  }
+  if (snakeY[0] > 590 || snakeY[0] < 10) { //Checks if the snake tries to exit the game window and "kills" itself
+    gameOver = true;
+  } else if (snakeX[0] > 590 || snakeX[0] < 10) {
+    gameOver = true;
+  }
+}
+
+
+void collectPoints() { //Allows the collection of points by the snake
+  if ((x > boxX - 17)&&(x < boxX + 17)) {//Checks if the head of the snake is close enough to a point to gain it
+    if ((y > boxY - 17)&&(y < boxY + 17)) {
+      boxY = int(random(10, 590));
+      boxX = int(random(10, 590));
+      lengthsnake++;//Increases length of snake by 1
+      points++;//Adds 1 to the point counter
+    }
+  }
+  fill(255);
+  textAlign(LEFT);
+  textSize(28);
+  text("Points: " + points, 15, 40); //Displays total points to the user
+}
+
+void startScreen() { //Implements a start screen where the user has to confirm game start
+  if (startScreen == true) { //Checks if the start screen is active
+    rectMode(CORNER);
+    rect(0, 0, 600, 600);
+    rectMode(CENTER);
+    rect(300, 300, 250, 50);
+    textAlign(CENTER);
+    textSize(75);
+    fill(0, 0, 0);
+    text("SNAKE", 297, 148);
+    fill(124, 252, 0);
+    text("SNAKE", 295, 150);
+    fill(255, 0, 0);
+    textSize(26);
+    text("CLICK TO START", 300, 310);
+    textSize(12);
+    fill(0, 0, 0);
+    text("A Project by Daniel Ghita", 295, 580);
+  }
+}
+
+void gameOver() { //Creates a game over screen where the user will be shown their score and prompted with an option to exit
+  if (gameOver == true) {
+    rectMode(CORNER);
+    rect(0, 0, 600, 600);
+    textAlign(CENTER);
+    textSize(58);
+    fill(0, 0, 0);
+    text("Game Over", 303, 97);
+    fill(48, 129, 238);
+    text("Game Over", 300, 100);
+    fill(244, 41, 65);
+    textSize(32);
+    text("Your Score: " + points, 300, 175);
+    rectMode(CENTER);
+    fill(255, 255, 255);
+    rect(300, 400, 200, 50);
+    fill(255, 0, 0);
+    text("Exit", 300, 410);
+  }
+}
